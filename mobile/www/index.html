@@ -62,7 +62,7 @@ const preview=document.querySelector("#preview"), status=document.querySelector(
 const progress=document.querySelector("#progress"), bar=document.querySelector("#bar");
 key.value=localStorage.getItem("upscayl-api-key")||"";
 key.addEventListener("input",()=>{localStorage.setItem("upscayl-api-key",key.value.trim());check()});
-file.addEventListener("change",()=>{if(file.files[0]){preview.src=URL.createObjectURL(file.files[0]);preview.style.display="block"}check()});
+file.addEventListener("change",()=>{if(file.files[0]){preview.src=URL.createObjectURL(file.files[0]);preview.style.display="block"}else{preview.removeAttribute("src");preview.style.display="none"}check()});
 function check(){go.disabled=!(key.value.trim()&&file.files?.[0])}
 function msg(s){status.textContent=s}
 async function request(path, options={}) {
