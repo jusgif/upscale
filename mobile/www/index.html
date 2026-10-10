@@ -52,7 +52,7 @@ const ORT_VERSION="1.30.0";
 const MODEL_MAX_EDGE=1024, TILE=64, OVERLAP=8;
 const $=s=>document.querySelector(s);
 const fileInput=$("#file"),go=$("#go"),prepare=$("#prepare"),status=$("#status"),modelStatus=$("#modelStatus"),bar=$("#bar"),progress=$("#progress");
-let ort=null,session=null,selectedFile=null,resultBlob=null,installPrompt=null;
+let ort=null,session=null,selectedFile=null,resultBlob=null,installPrompt=null;\nlet serviceWorkerReady=Promise.resolve();
 function setStatus(s){status.textContent=s}
 function setModelStatus(s){modelStatus.textContent=s}
 function setProgress(p){progress.style.display="block";bar.style.width=Math.max(0,Math.min(100,p))+"%"}
@@ -81,7 +81,7 @@ async function modelBytes(){
 async function prepareModel(){
  prepare.disabled=true;go.disabled=true;
  try{
-   const runtime=await loadOrt(),bytes=await modelBytes();
+   await serviceWorkerReady;\n   const runtime=await loadOrt(),bytes=await modelBytes();
    setModelStatus("Loading AI model into memory…");
    try{session=await runtime.InferenceSession.create(bytes,{executionProviders:["webgpu","wasm"],graphOptimizationLevel:"all"})}
    catch(webgpuError){setModelStatus("GPU path unavailable; trying CPU fallback…");session=await runtime.InferenceSession.create(bytes,{executionProviders:["wasm"],graphOptimizationLevel:"all"})}
@@ -154,7 +154,7 @@ $("#save").addEventListener("click",()=>{
 });
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("#install").hidden=false});
 $("#install").addEventListener("click",async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$("#install").hidden=true}else $("#installStatus").textContent="In Chrome, open the menu and choose Install app or Add to Home screen."});
-if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))serviceWorkerReady=navigator.serviceWorker.register("./service-worker.js").then(()=>navigator.serviceWorker.ready).catch(()=>null);
 if(location.protocol==="https:")$("#installStatus").textContent="HTTPS enabled: offline shell caching is available.";
 </script>
 </body>
