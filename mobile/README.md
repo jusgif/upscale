@@ -15,7 +15,7 @@ The mobile page uses ONNX Runtime Web and the browser-ready Real-ESRGAN x4plus O
 ## Open in Android browser
 
 1. In the repository settings, open Settings > Pages and set Build and deployment source to GitHub Actions. The GitHub Actions token used by this repository cannot enable Pages automatically.
-2. After Pages is enabled, the browser PWA workflow deploys the mobile/www directory on pushes to main. Open the published HTTPS URL in Chrome on Android. The URL is typically https://OWNER.github.io/REPOSITORY/.
+2. The browser app is packaged as the upscayl-browser-pwa artifact after pushes to main. To publish it on GitHub Pages, open Actions > Deploy browser PWA to GitHub Pages and select Run workflow. The deployment may take a few minutes. Open the published HTTPS URL in Chrome on Android; it is typically https://OWNER.github.io/REPOSITORY/.
 3. Tap Download / prepare AI model while online and wait until the app says the model is ready.
 4. Choose an image and tap Upscale locally.
 5. Use Chrome's menu to Install app or Add to Home screen. Reopen once while online after installation to confirm offline cache is available.
