@@ -14,23 +14,19 @@ The mobile page uses ONNX Runtime Web and the browser-ready Real-ESRGAN x4plus O
 
 ## Open in Android browser
 
-1. Deploy the mobile/www directory to an HTTPS static host. The included GitHub Actions workflow deploys it to GitHub Pages.
-2. Open the published HTTPS URL in Chrome on Android.
+1. In the repository settings, open Settings > Pages and set Build and deployment source to GitHub Actions. The GitHub Actions token used by this repository cannot enable Pages automatically.
+2. After Pages is enabled, the browser PWA workflow deploys the mobile/www directory on pushes to main. Open the published HTTPS URL in Chrome on Android. The URL is typically https://OWNER.github.io/REPOSITORY/.
 3. Tap Download / prepare AI model while online and wait until the app says the model is ready.
 4. Choose an image and tap Upscale locally.
 5. Use Chrome's menu to Install app or Add to Home screen. Reopen once while online after installation to confirm offline cache is available.
 
-Do not open index.html as a file:// URL. Service workers and PWA installation require HTTPS (or localhost).
+Do not open index.html as a file:// URL. Service workers and PWA installation require HTTPS (or localhost). If you do not want to use GitHub Pages, deploy mobile/www to any static HTTPS host.
 
 ## Model and runtime
 
 - Model: https://huggingface.co/skillsafe-ai/realesrgan-x4plus, based on the upstream Real-ESRGAN x4plus weights.
 - The model card reports the original weights as BSD-3-Clause licensed; see the upstream license at https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE and the model card for attribution.
 - Runtime: https://onnxruntime.ai/docs/get-started/with-javascript/web.html, loaded from jsDelivr. The first launch needs network access for these public assets.
-
-## GitHub Pages deployment
-
-The workflow in .github/workflows/browser-pwa.yml deploys mobile/www to GitHub Pages after pushes to main. If Pages is not enabled for the repository, the workflow attempts to enable it. The first deployment may take a few minutes. The resulting app URL is typically https://OWNER.github.io/REPOSITORY/.
 
 ## Tests
 
