@@ -1,8 +1,9 @@
 const SHELL_CACHE="upscayl-shell-v2";
 const RUNTIME_CACHE="upscayl-runtime-v1";
+const MODEL_CACHE="upscayl-local-model-v1";
 const SHELL=["./","./index.html","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",event=>event.waitUntil((async()=>{const c=await caches.open(SHELL_CACHE);await c.addAll(SHELL);await self.skipWaiting()})()));
-self.addEventListener("activate",event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(![SHELL_CACHE,RUNTIME_CACHE,"upscayl-local-model-v1"].includes(key))await caches.delete(key);await self.clients.claim()})()));
+self.addEventListener("activate",event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith("upscayl-")&&![SHELL_CACHE,RUNTIME_CACHE,MODEL_CACHE].includes(key))await caches.delete(key);await self.clients.claim()})()));
 self.addEventListener("fetch",event=>{
  const req=event.request;if(req.method!=="GET")return;
  const url=new URL(req.url);
