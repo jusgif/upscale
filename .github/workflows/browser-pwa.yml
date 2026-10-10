@@ -17,7 +17,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Package browser PWA
+        uses: actions/upload-artifact@v4
+        with:
+          name: upscayl-browser-pwa
+          path: mobile/www
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
+    needs: package
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
