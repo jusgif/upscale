@@ -10,6 +10,7 @@ function runUpscaylMobileTests(){
  check("Service worker registration present",source.includes("serviceWorker"));
  check("Real-ESRGAN ONNX model configured",source.includes("skillsafe-ai/realesrgan-x4plus/resolve/main/model.onnx"));
  check("ONNX Runtime Web configured",source.includes("onnxruntime-web@"));
+ check("No escaped newline syntax artifacts",!source.includes("\\n"));
  check("API key UI removed",!document.querySelector("#key")&&!source.includes("api.upscayl.org"));
  check("No cloud task endpoints",!source.includes("/start-task")&&!source.includes("/get-task-status"));
  check("Image input accepts images",document.querySelector("#file")?.accept==="image/*");
