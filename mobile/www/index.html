@@ -4,105 +4,158 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0f">
+<meta name="description" content="Private, local AI image upscaling on your device. No API key or image upload.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Upscayl Mobile</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}
-*{box-sizing:border-box}body{margin:0;background:#0b0b0f;color:#f5f5f7}
-main{max-width:720px;margin:auto;padding:24px 18px 40px}
-h1{margin:8px 0 4px;font-size:32px}.sub{color:#a7a7b0;margin-bottom:24px}
-.card{background:#15151c;border:1px solid #292933;border-radius:18px;padding:16px;margin:12px 0}
-label{display:block;font-size:13px;color:#aaa;margin:12px 0 6px}
-input,select,button{width:100%;border-radius:12px;border:1px solid #353541;background:#101017;color:#fff;padding:13px;font-size:16px}
-button{background:#fff;color:#111;border:0;font-weight:700;margin-top:16px}
-button:disabled{opacity:.45}#preview{width:100%;max-height:360px;object-fit:contain;border-radius:12px;margin-top:12px;display:none}
-#progress{height:8px;background:#292933;border-radius:99px;overflow:hidden;margin-top:16px;display:none}
-#bar{height:100%;width:0;background:#fff;transition:width .3s}
-.status{color:#aaa;font-size:14px;margin-top:10px;white-space:pre-wrap}
-small{color:#888;line-height:1.5}
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}*{box-sizing:border-box}
+body{margin:0;background:#0b0b0f;color:#f5f5f7}main{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom))}
+h1{margin:8px 0 4px;font-size:32px}.sub{color:#aaa;margin-bottom:20px}.card{background:#15151c;border:1px solid #292933;border-radius:18px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:#bbb;margin:12px 0 6px}input,select,button{width:100%;border-radius:12px;border:1px solid #353541;background:#101017;color:#fff;padding:13px;font-size:16px}
+button{background:#fff;color:#111;border:0;font-weight:700;margin-top:12px}button:disabled{opacity:.45}
+button.secondary{background:#292933;color:#fff}small,.muted{color:#999;font-size:13px;line-height:1.5}.status{font-size:14px;white-space:pre-wrap;margin-top:10px;overflow-wrap:anywhere}
+#preview,#result{width:100%;max-height:360px;object-fit:contain;border-radius:12px;margin-top:12px;display:none;background:#08080b}
+#progress{height:8px;background:#292933;border-radius:99px;overflow:hidden;margin-top:16px;display:none}#bar{height:100%;width:0;background:#fff;transition:width .2s}
+.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#25252e;color:#ddd;font-size:12px;margin:3px 4px 3px 0}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}.warning{color:#f1cf8a}.ok{color:#a8e6b0}
 </style>
 </head>
 <body>
 <main>
-<h1>Upscayl</h1>
-<div class="sub">AI image upscaling for Android</div>
-
+<h1>Upscayl</h1><div class="sub">Private AI upscaling · runs on this device</div>
 <div class="card">
-<label>Upscayl API key</label>
-<input id="key" type="password" placeholder="Paste your API key">
-<small>Your key is stored only on this device and is never bundled into the APK.</small>
-
-<label>Image</label>
-<input id="file" type="file" accept="image/*">
-<img id="preview">
-
-<label>Model</label>
-<select id="model">
-<option value="quick-clear-4x">Quick Clear 4x</option>
-<option value="ultramix-balanced">Ultramix Balanced</option>
-<option value="ultrasharp">Ultrasharp</option>
-<option value="remacri">Remacri</option>
-</select>
-
-<label>Scale</label>
-<select id="scale"><option value="2">2x</option><option value="3">3x</option><option value="4" selected>4x</option></select>
-
-<button id="go" disabled>Upscale image</button>
-<div id="progress"><div id="bar"></div></div>
-<div id="status" class="status"></div>
+  <div><span class="pill">No API key</span><span class="pill">No image upload</span><span class="pill" id="engine">Browser engine</span></div>
+  <p class="muted">First use needs an internet connection to download the AI model (about 64 MB). Once cached, the model can be reused offline when this app is hosted and installed from HTTPS. Keep this page open while processing.</p>
+  <button id="prepare" class="secondary">Download / prepare AI model</button>
+  <div id="modelStatus" class="status" role="status">Model not loaded yet.</div>
+  <label for="file">Choose an image</label><input id="file" type="file" accept="image/*">
+  <img id="preview" alt="Selected image preview">
+  <div class="row">
+    <div><label for="scale">Output scale</label><select id="scale"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option></select></div>
+    <div><label for="quality">Output format</label><select id="quality"><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>
+  </div>
+  <p class="muted">For mobile memory safety, large images are resized to a maximum 1024-pixel long edge before AI processing. The AI model produces 4× output; 2× and 3× options are downscaled from that result.</p>
+  <button id="go" disabled>Upscale locally</button>
+  <div id="progress"><div id="bar"></div></div><div id="status" class="status" role="status" aria-live="polite"></div>
+  <img id="result" alt="Upscaled result preview">
+  <button id="save" class="secondary" hidden>Save upscaled image</button>
 </div>
-
-<div class="card">
-<small>Mobile builds use the Upscayl Cloud API because the desktop application invokes native NCNN/Vulkan binaries that are not Android executables. The desktop build remains unchanged.</small>
-</div>
+<div class="card"><strong>Privacy</strong><p class="muted">Images are processed in your browser and are not sent to a server. The model and browser runtime may be downloaded from their public hosting URLs. Use the hosted HTTPS app to enable service-worker caching and home-screen installation.</p><button id="install" class="secondary" hidden>Install app</button><div id="installStatus" class="status"></div></div>
 </main>
 <script>
-const API="https://api.upscayl.org";
-const key=document.querySelector("#key"), file=document.querySelector("#file"), go=document.querySelector("#go");
-const preview=document.querySelector("#preview"), status=document.querySelector("#status");
-const progress=document.querySelector("#progress"), bar=document.querySelector("#bar");
-key.value=localStorage.getItem("upscayl-api-key")||"";
-key.addEventListener("input",()=>{localStorage.setItem("upscayl-api-key",key.value.trim());check()});
-file.addEventListener("change",()=>{if(file.files[0]){preview.src=URL.createObjectURL(file.files[0]);preview.style.display="block"}else{preview.removeAttribute("src");preview.style.display="none"}check()});
-function check(){go.disabled=!(key.value.trim()&&file.files?.[0])}
-function msg(s){status.textContent=s}
-async function request(path, options={}) {
-  const headers={"X-API-Key":key.value.trim(),...(options.headers||{})};
-  const r=await fetch(API+path,{...options,headers});
-  const text=await r.text();
-  let data; try{data=JSON.parse(text)}catch{throw new Error(text||("HTTP "+r.status))}
-  if(!r.ok) throw new Error(data.message||data.error||("HTTP "+r.status));
-  return data;
+const MODEL_URL="https://huggingface.co/skillsafe-ai/realesrgan-x4plus/resolve/main/model.onnx";
+const MODEL_CACHE="upscayl-local-model-v1";
+const ORT_VERSION="1.22.0";
+const MODEL_MAX_EDGE=1024, TILE=64, OVERLAP=8;
+const $=s=>document.querySelector(s);
+const fileInput=$("#file"),go=$("#go"),prepare=$("#prepare"),status=$("#status"),modelStatus=$("#modelStatus"),bar=$("#bar"),progress=$("#progress");
+let ort=null,session=null,selectedFile=null,resultBlob=null,installPrompt=null;
+function setStatus(s){status.textContent=s}
+function setModelStatus(s){modelStatus.textContent=s}
+function setProgress(p){progress.style.display="block";bar.style.width=Math.max(0,Math.min(100,p))+"%"}
+function updateGo(){go.disabled=!(selectedFile&&session)}
+async function loadOrt(){
+ if(ort)return ort;
+ setModelStatus("Loading browser AI runtime…");
+ // The WebGPU build includes a WASM fallback. Runtime assets are cached by the service worker on HTTPS.
+ ort=await import("https://cdn.jsdelivr.net/npm/onnxruntime-web@"+ORT_VERSION+"/dist/ort.webgpu.min.mjs");
+ ort.env.wasm.wasmPaths="https://cdn.jsdelivr.net/npm/onnxruntime-web@"+ORT_VERSION+"/dist/";
+ ort.env.wasm.numThreads=1;
+ ort.env.logLevel="error";
+ return ort;
 }
-function unwrap(x){return x?.data??x?.result??x}
-go.onclick=async()=>{
-  const f=file.files[0]; go.disabled=true; progress.style.display="block"; bar.style.width="5%"; msg("Uploading…");
-  try{
-    const form=new FormData();
-    form.append("file",f,f.name); form.append("urls",""); form.append("model",document.querySelector("#model").value);
-    form.append("scale",document.querySelector("#scale").value); form.append("saveImageAs","png"); form.append("enhanceFace","false");
-    const created=unwrap(await request("/start-task",{method:"POST",body:form}));
-    const taskId=created.taskId||created.id||created.task?.taskId;
-    if(!taskId) throw new Error("API did not return a task ID.");
-    msg("Upscaling…");
-    let outputUrl;
-    for(let i=0;i<180;i++){
-      await new Promise(r=>setTimeout(r,2000));
-      const s=unwrap(await request("/get-task-status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{taskId}})}));
-      const pct=Number(s.progress??s.percent??s.task?.progress??0);
-      bar.style.width=Math.min(95,Math.max(5,pct))+"%";
-      const state=String(s.status??s.state??s.task?.status??"").toLowerCase();
-      outputUrl=s.outputUrl||s.downloadUrl||s.resultUrl||s.task?.outputUrl||s.task?.downloadUrl;
-      if(outputUrl || ["completed","complete","done","success","succeeded"].includes(state)) break;
-      if(["failed","error","cancelled"].includes(state)) throw new Error(s.message||"Upscaling failed.");
-    }
-    if(!outputUrl) throw new Error("Upscaling finished without a downloadable result.");
-    msg("Downloading result…"); bar.style.width="100%";
-    const result=await fetch(outputUrl); if(!result.ok) throw new Error("Could not download the result.");
-    const blob=await result.blob(); const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download=f.name.replace(/\.[^.]+$/,"")+"_upscayl.png"; a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),5000); msg("Done. The upscaled PNG was saved/downloaded.");
-  }catch(e){bar.style.width="0%";msg("Error: "+(e?.message||e))}finally{go.disabled=false;check()}
-};
+async function modelBytes(){
+ const cache=await caches.open(MODEL_CACHE);
+ const cached=await cache.match(MODEL_URL);
+ if(cached){setModelStatus("Using cached AI model.");return await cached.arrayBuffer()}
+ setModelStatus("Downloading AI model (about 64 MB)…");
+ const response=await fetch(MODEL_URL,{mode:"cors"});
+ if(!response.ok)throw new Error("Model download failed (HTTP "+response.status+").");
+ if(response.type==="opaque")throw new Error("Model host did not allow a readable download.");
+ await cache.put(MODEL_URL,response.clone());
+ return await response.arrayBuffer();
+}
+async function prepareModel(){
+ prepare.disabled=true;go.disabled=true;
+ try{
+   const runtime=await loadOrt(),bytes=await modelBytes();
+   setModelStatus("Loading AI model into memory…");
+   try{session=await runtime.InferenceSession.create(bytes,{executionProviders:["webgpu","wasm"],graphOptimizationLevel:"all"})}
+   catch(webgpuError){setModelStatus("GPU path unavailable; trying CPU fallback…");session=await runtime.InferenceSession.create(bytes,{executionProviders:["wasm"],graphOptimizationLevel:"all"})}
+   $("#engine").textContent=navigator.gpu?"WebGPU / CPU fallback":"WebAssembly CPU";
+   setModelStatus("AI model ready. Processing stays on this device.");
+ }catch(e){session=null;setModelStatus("Could not prepare model: "+(e.message||e)+" If the download was interrupted, try again with a stable connection.");}
+ finally{prepare.disabled=false;updateGo()}
+}
+prepare.addEventListener("click",prepareModel);
+fileInput.addEventListener("change",()=>{
+ selectedFile=fileInput.files&&fileInput.files[0]||null;resultBlob=null;$("#result").style.display="none";$("#save").hidden=true;
+ if(selectedFile){$("#preview").src=URL.createObjectURL(selectedFile);$("#preview").style.display="block";setStatus(selectedFile.name+" · "+Math.round(selectedFile.size/1024)+" KB")}
+ else{$("#preview").style.display="none";setStatus("")}
+ updateGo();
+});
+function tileStarts(length,size,step){const out=[];for(let p=0;p<length;p+=step){out.push(Math.min(p,Math.max(0,length-size)));if(p+size>=length)break}return [...new Set(out)]}
+async function processImage(bitmap){
+ const ratio=Math.min(1,MODEL_MAX_EDGE/Math.max(bitmap.width,bitmap.height));
+ const w=Math.max(1,Math.round(bitmap.width*ratio)),h=Math.max(1,Math.round(bitmap.height*ratio));
+ const inputCanvas=document.createElement("canvas");inputCanvas.width=w;inputCanvas.height=h;
+ const inputCtx=inputCanvas.getContext("2d",{willReadFrequently:true});inputCtx.drawImage(bitmap,0,0,w,h);
+ const outputCanvas=document.createElement("canvas");outputCanvas.width=w*4;outputCanvas.height=h*4;
+ const outputCtx=outputCanvas.getContext("2d");
+ const startsX=tileStarts(w,TILE,TILE-OVERLAP*2),startsY=tileStarts(h,TILE,TILE-OVERLAP*2);
+ const total=startsX.length*startsY.length;let done=0;
+ for(const y of startsY)for(const x of startsX){
+   const tw=Math.min(TILE,w-x),th=Math.min(TILE,h-y);
+   const pixels=inputCtx.getImageData(x,y,tw,th).data;
+   const plane=new Float32Array(3*tw*th);
+   for(let i=0;i<tw*th;i++){plane[i]=pixels[i*4]/255;plane[tw*th+i]=pixels[i*4+1]/255;plane[2*tw*th+i]=pixels[i*4+2]/255}
+   const feeds={};feeds[session.inputNames[0]]=new ort.Tensor("float32",plane,[1,3,th,tw]);
+   const outputs=await session.run(feeds),tensor=outputs[session.outputNames[0]];
+   const outData=tensor.data,ow=tw*4,oh=th*4;
+   const cropL=x>0?Math.min(OVERLAP,tw>>2):0,cropT=y>0?Math.min(OVERLAP,th>>2):0;
+   const cropR=x+tw<w?Math.min(OVERLAP,tw>>2):0,cropB=y+th<h?Math.min(OVERLAP,th>>2):0;
+   const cw=ow-(cropL+cropR)*4,ch=oh-(cropT+cropB)*4;
+   const imageData=new ImageData(cw,ch);
+   for(let py=0;py<ch;py++)for(let px=0;px<cw;px++){
+     const sx=px+cropL*4,sy=py+cropT*4,si=sy*ow+sx,di=(py*cw+px)*4;
+     imageData.data[di]=Math.max(0,Math.min(255,Math.round(outData[si]*255)));
+     imageData.data[di+1]=Math.max(0,Math.min(255,Math.round(outData[ow*oh+si]*255)));
+     imageData.data[di+2]=Math.max(0,Math.min(255,Math.round(outData[2*ow*oh+si]*255)));
+     imageData.data[di+3]=255;
+   }
+   outputCtx.putImageData(imageData,(x+cropL)*4,(y+cropT)*4);
+   done++;setProgress(done/total*95);setStatus("Processing locally… tile "+done+" of "+total);
+   if(done%2===0)await new Promise(r=>setTimeout(r,0));
+ }
+ const scale=Number($("#scale").value),mime=$("#quality").value;
+ let finalCanvas=outputCanvas;
+ if(scale!==4){finalCanvas=document.createElement("canvas");finalCanvas.width=w*scale;finalCanvas.height=h*scale;finalCanvas.getContext("2d").drawImage(outputCanvas,0,0,finalCanvas.width,finalCanvas.height)}
+ resultBlob=await new Promise(resolve=>finalCanvas.toBlob(resolve,mime,mime==="image/png"?undefined:.92));
+ if(!resultBlob)throw new Error("Could not encode output image.");
+ $("#result").src=URL.createObjectURL(resultBlob);$("#result").style.display="block";$("#save").hidden=false;
+ setProgress(100);setStatus("Finished locally. Output: "+finalCanvas.width+" × "+finalCanvas.height+". No image was uploaded.");
+}
+go.addEventListener("click",async()=>{
+ if(!session||!selectedFile)return;
+ go.disabled=true;prepare.disabled=true;setProgress(1);
+ try{
+   const bitmap=await createImageBitmap(selectedFile);
+   await processImage(bitmap);bitmap.close();
+ }catch(e){setStatus("Upscaling failed: "+(e.message||e)+" Try a smaller image or reload the page.");bar.style.width="0%"}
+ finally{prepare.disabled=false;updateGo()}
+});
+$("#save").addEventListener("click",()=>{
+ if(!resultBlob)return;
+ const ext=resultBlob.type==="image/jpeg"?"jpg":resultBlob.type==="image/webp"?"webp":"png";
+ const a=document.createElement("a");a.href=URL.createObjectURL(resultBlob);a.download=(selectedFile?.name||"image").replace(/\.[^.]+$/,"")+"_upscaled."+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+});
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("#install").hidden=false});
+$("#install").addEventListener("click",async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$("#install").hidden=true}else $("#installStatus").textContent="In Chrome, open the menu and choose Install app or Add to Home screen."});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+if(location.protocol==="https:")$("#installStatus").textContent="HTTPS enabled: offline shell caching is available.";
 </script>
 </body>
 </html>
