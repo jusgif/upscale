@@ -14,8 +14,8 @@ function runUpscaylMobileTests(){
  check("Image input accepts images",document.querySelector("#file")?.accept==="image/*");
  check("Output scales 2x 3x 4x",["2","3","4"].every(v=>Array.from(document.querySelector("#scale").options).some(o=>o.value===v)));
  check("Upscale button disabled before selection/model",document.querySelector("#go").disabled);
- check("Progress initially hidden",document.querySelector("#progress").style.display==="none");
- check("Result image initially hidden",document.querySelector("#result").style.display==="none");
+ check("Progress initially hidden",getComputedStyle(document.querySelector("#progress")).display==="none");
+ check("Result image initially hidden",getComputedStyle(document.querySelector("#result")).display==="none");
  const failures=tests.filter(t=>!t.passed);
  return {passed:tests.length-failures.length,total:tests.length,passRate:Number(((tests.length-failures.length)/tests.length*100).toFixed(1)),failures,results:{static:tests}};
 }
