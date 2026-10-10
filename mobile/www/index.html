@@ -75,7 +75,7 @@ async function modelBytes(){
  const response=await fetch(MODEL_URL,{mode:"cors"});
  if(!response.ok)throw new Error("Model download failed (HTTP "+response.status+").");
  if(response.type==="opaque")throw new Error("Model host did not allow a readable download.");
- await cache.put(MODEL_URL,response.clone());
+ try{await cache.put(MODEL_URL,response.clone())}catch(e){setModelStatus("Model downloaded; browser storage could not cache it, so offline reuse may not work.")}
  return await response.arrayBuffer();
 }
 async function prepareModel(){
